@@ -141,22 +141,34 @@ body{margin:0;font-family:'Noto Sans KR',sans-serif;user-select:none;-webkit-tap
 </div>
 </div>
 
-<div id="authModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 p-4">
-<div class="bg-slate-900 border border-orange-500/40 rounded-2xl max-w-sm w-full p-5">
-<div class="flex justify-between mb-2"><h2 class="font-extrabold text-orange-300">서버 계정</h2><button id="authCloseBtn" type="button" class="cursor-pointer">✕</button></div>
-<p class="text-xs text-slate-400 mb-3">휴대폰 뒷 8자리 + PIN 4자리</p>
-<div class="flex gap-1 mb-3 bg-slate-950 p-1 rounded-xl border border-slate-800">
-<button id="modeLoginBtn" type="button" class="flex-1 py-1.5 rounded-lg text-xs font-extrabold bg-orange-600 text-white cursor-pointer">로그인</button>
-<button id="modeRegisterBtn" type="button" class="flex-1 py-1.5 rounded-lg text-xs font-extrabold text-slate-400 cursor-pointer">가입</button>
+<div id="authModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+<div class="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-2">
+<span class="text-lg">🟨</span>
+<h2 class="text-base font-extrabold text-amber-300">서버 저장 계정</h2>
 </div>
-<form id="authForm" class="flex flex-col gap-3">
-<div class="flex rounded-xl bg-slate-950 border border-slate-700 overflow-hidden">
-<span class="px-3 py-2.5 bg-slate-900 text-orange-300 font-bold text-sm border-r border-slate-800">010-</span>
-<input id="authPhoneDigits" type="tel" inputmode="numeric" maxlength="9" required placeholder="1234-5678" class="w-full px-3 py-2.5 bg-transparent text-sm font-bold focus:outline-none"/>
+<button id="authCloseBtn" type="button" class="text-slate-400 hover:text-slate-200 text-sm font-bold px-2 py-1 cursor-pointer">✕</button>
 </div>
-<input id="authPinCode" type="password" inputmode="numeric" maxlength="4" pattern="\d{4}" required placeholder="PIN" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm font-bold tracking-widest focus:outline-none"/>
-<div id="authErrorMsg" class="hidden text-xs text-rose-400"></div>
-<button type="submit" class="w-full py-2.5 rounded-xl font-black bg-gradient-to-r from-orange-500 to-rose-600 text-slate-950 cursor-pointer">확인</button>
+<p class="text-xs text-slate-400 leading-relaxed mb-4">휴대폰 번호 뒷 8자리와 숫자 비밀번호 4자리로 간편하게 서버에 데이터를 영구 저장하세요.</p>
+<div class="flex rounded-xl bg-slate-950 p-1 border border-slate-800 mb-4">
+<button id="modeLoginBtn" type="button" class="flex-1 py-1.5 rounded-lg text-xs font-extrabold bg-amber-500 text-slate-950 transition cursor-pointer">기존 계정 로그인</button>
+<button id="modeRegisterBtn" type="button" class="flex-1 py-1.5 rounded-lg text-xs font-extrabold text-slate-400 hover:text-slate-200 transition cursor-pointer">간편 회원가입</button>
+</div>
+<form id="authForm" class="flex flex-col gap-3.5">
+<div>
+<label class="block text-[11px] font-bold text-slate-300 mb-1.5">아이디 (휴대폰 번호 뒷 8자리)</label>
+<div class="flex items-center rounded-xl bg-slate-950 border border-slate-700 focus-within:border-amber-400 overflow-hidden">
+<span class="px-3 py-2.5 bg-slate-900 text-amber-300 font-extrabold text-sm border-r border-slate-800 select-none">010 -</span>
+<input id="authPhoneDigits" type="tel" inputmode="numeric" maxlength="9" required placeholder="1234-5678 (숫자 8자리)" class="w-full px-3 py-2.5 bg-transparent text-sm font-bold tracking-wider text-slate-100 focus:outline-none"/>
+</div>
+</div>
+<div>
+<label class="block text-[11px] font-bold text-slate-300 mb-1.5">비밀번호 (숫자 4자리)</label>
+<input id="authPinCode" type="password" inputmode="numeric" maxlength="4" pattern="\d{4}" required placeholder="숫자 4자리 입력 (예: 1234)" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm font-bold tracking-[0.35em] text-slate-100 focus:outline-none focus:border-amber-400"/>
+</div>
+<div id="authErrorMsg" class="hidden text-xs text-rose-400 font-semibold bg-rose-950/40 border border-rose-800/50 rounded-lg px-3 py-2"></div>
+<button id="authSubmitBtn" type="submit" class="w-full py-2.5 rounded-xl text-xs sm:text-sm font-black bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-lg shadow-amber-500/20 transition mt-0.5 cursor-pointer">로그인 및 서버저장 연동</button>
 </form>
 </div>
 </div>
@@ -1465,21 +1477,33 @@ async function initToss() {
 
 const authM = document.getElementById('authModal');
 const phone = document.getElementById('authPhoneDigits'), pin = document.getElementById('authPinCode');
+function setAuthMode(register) {
+  isRegisterMode = register;
+  document.getElementById('authErrorMsg').classList.add('hidden');
+  const ml = document.getElementById('modeLoginBtn');
+  const mr = document.getElementById('modeRegisterBtn');
+  const sb = document.getElementById('authSubmitBtn');
+  if (register) {
+    mr.className = 'flex-1 py-1.5 rounded-lg text-xs font-extrabold bg-amber-500 text-slate-950 transition cursor-pointer';
+    ml.className = 'flex-1 py-1.5 rounded-lg text-xs font-extrabold text-slate-400 hover:text-slate-200 transition cursor-pointer';
+    sb.textContent = '가입하고 현재 데이터 서버저장';
+  } else {
+    ml.className = 'flex-1 py-1.5 rounded-lg text-xs font-extrabold bg-amber-500 text-slate-950 transition cursor-pointer';
+    mr.className = 'flex-1 py-1.5 rounded-lg text-xs font-extrabold text-slate-400 hover:text-slate-200 transition cursor-pointer';
+    sb.textContent = '로그인 및 서버저장 연동';
+  }
+}
 document.getElementById('serverSaveGoldBtn').onclick = () => {
   if (authToken) syncSave(true);
-  else { authM.classList.remove('hidden'); authM.classList.add('flex'); }
+  else {
+    setAuthMode(false);
+    authM.classList.remove('hidden'); authM.classList.add('flex');
+    setTimeout(() => phone.focus(), 50);
+  }
 };
 document.getElementById('authCloseBtn').onclick = () => { authM.classList.add('hidden'); authM.classList.remove('flex'); };
-document.getElementById('modeLoginBtn').onclick = () => {
-  isRegisterMode = false;
-  document.getElementById('modeLoginBtn').className = 'flex-1 py-1.5 rounded-lg text-xs font-extrabold bg-orange-600 text-white cursor-pointer';
-  document.getElementById('modeRegisterBtn').className = 'flex-1 py-1.5 rounded-lg text-xs font-extrabold text-slate-400 cursor-pointer';
-};
-document.getElementById('modeRegisterBtn').onclick = () => {
-  isRegisterMode = true;
-  document.getElementById('modeRegisterBtn').className = 'flex-1 py-1.5 rounded-lg text-xs font-extrabold bg-orange-600 text-white cursor-pointer';
-  document.getElementById('modeLoginBtn').className = 'flex-1 py-1.5 rounded-lg text-xs font-extrabold text-slate-400 cursor-pointer';
-};
+document.getElementById('modeLoginBtn').onclick = () => setAuthMode(false);
+document.getElementById('modeRegisterBtn').onclick = () => setAuthMode(true);
 phone.oninput = e => { const d = e.target.value.replace(/\D/g, '').slice(0, 8); e.target.value = d.length > 4 ? d.slice(0, 4) + '-' + d.slice(4) : d; };
 pin.oninput = e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4); };
 document.getElementById('authForm').onsubmit = async e => {
