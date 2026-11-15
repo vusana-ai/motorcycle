@@ -52,7 +52,7 @@ body{margin:0;font-family:'Noto Sans KR',sans-serif;user-select:none;-webkit-tap
 <section class="grid grid-cols-2 sm:grid-cols-5 gap-2">
 <div class="col-span-2 sm:col-span-2 bg-slate-900/90 border border-orange-500/30 rounded-xl px-3 py-2 flex items-center justify-between">
 <div>
-<div class="text-[10px] text-orange-300/80 font-bold">STAGE <span id="scoreBadge">1</span>/10</div>
+<div class="text-[10px] text-orange-300/80 font-bold">🏁 5분 완주 · 주행 거리</div>
 <div id="scoreDisplay" class="text-base sm:text-lg font-black text-orange-400">0 m</div>
 </div>
 <button id="startGameBtn" type="button" class="px-3 py-2 rounded-lg text-xs font-black bg-gradient-to-r from-orange-500 to-rose-600 text-slate-950 cursor-pointer active:scale-95 transition">레이스 시작</button>
@@ -110,7 +110,7 @@ body{margin:0;font-family:'Noto Sans KR',sans-serif;user-select:none;-webkit-tap
 <div class="flex justify-between items-center">
 <div>
 <div class="text-xs font-extrabold text-orange-300">🏆 명예의 전당</div>
-<div class="text-[10px] text-slate-400">최고 주행 거리</div>
+<div class="text-[10px] text-slate-400">종합점수 = 거리(m) + 최고속도×10 + 먹은 골드(G)</div>
 </div>
 <button id="refreshRankingBtn" type="button" class="px-2.5 py-1 rounded-lg text-[11px] bg-slate-800 border border-slate-700 cursor-pointer">새로고침</button>
 </div>
@@ -197,14 +197,14 @@ const VIP_PRICE = 7000;
 const STORAGE = 'moto_racing_3d_save_v1';
 const TOKEN_KEY = 'moto_racing_3d_jwt';
 const USER_KEY = 'moto_racing_3d_user';
-const MAX_STAGE = 10;
+const FINISH_TIME_SEC = 300;
 const LANES = [-3.2, 0, 3.2];
 
 let authToken = localStorage.getItem(TOKEN_KEY);
 let currentUsername = localStorage.getItem(USER_KEY);
 let isRegisterMode = false;
 
-const defState = () => ({ highScore: 0, gold: 200, soundEnabled: true, bgmEnabled: true, isVip: false, selectedBike: 1, bestTimeSec: null, maxSpeedKmh: 0 });
+const defState = () => ({ highScore: 0, gold: 200, soundEnabled: true, bgmEnabled: true, isVip: false, selectedBike: 1, bestTimeSec: null, maxSpeedKmh: 0, bestRunGold: 0, bestTotalScore: 0 });
 function sanitize(p) {
   const b = defState();
   if (!p || typeof p !== 'object') return b;
@@ -218,7 +218,9 @@ function sanitize(p) {
     isVip,
     selectedBike: isVip ? rawBike : 1,
     bestTimeSec: typeof p.bestTimeSec === 'number' && p.bestTimeSec > 0 ? Math.round(p.bestTimeSec * 10) / 10 : null,
-    maxSpeedKmh: typeof p.maxSpeedKmh === 'number' && p.maxSpeedKmh >= 0 ? Math.floor(p.maxSpeedKmh) : 0
+    maxSpeedKmh: typeof p.maxSpeedKmh === 'number' && p.maxSpeedKmh >= 0 ? Math.floor(p.maxSpeedKmh) : 0,
+    bestRunGold: typeof p.bestRunGold === 'number' && p.bestRunGold >= 0 ? Math.floor(p.bestRunGold) : 0,
+    bestTotalScore: typeof p.bestTotalScore === 'number' && p.bestTotalScore >= 0 ? Math.floor(p.bestTotalScore) : (typeof p.highScore === 'number' ? Math.floor(p.highScore) : 0)
   };
 }
 let state = (() => { try { const r = localStorage.getItem(STORAGE); return r ? sanitize(JSON.parse(r)) : defState(); } catch { return defState(); } })();
@@ -233,7 +235,7 @@ async function syncSave(show) {
     const res = await fetch(API + '/api/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
-      body: JSON.stringify({ gameId: GAME_ID, saveData: state, score: state.highScore })
+      body: JSON.stringify({ gameId: GAME_ID, saveData: state, score: state.bestTotalScore })
     });
     if (res.status === 401 || res.status === 403) { handleLogout(true); return; }
     if (res.ok) {
@@ -898,7 +900,7 @@ for (let i = 0; i < 6; i++) fuelPool.push(createFuelCan());
 
 // Game vars
 let running = false;
-let distance = 0, stage = 1, lives = 1, elapsedTime = 0, runMaxSpeed = 0;
+let distance = 0, lives = 1, elapsedTime = 0, runMaxSpeed = 0, runGold = 0;
 let isCleared = false, overlayLockUntil = 0;
 function formatTime(sec) {
   const m = String(Math.floor(sec / 60)).padStart(2, '0');
@@ -929,7 +931,7 @@ resize();
 
 function startGame() {
   applySelectedBikeMesh();
-  distance = 0; stage = 1; lives = state.isVip ? 3 : 1; elapsedTime = 0; runMaxSpeed = 0; isCleared = false;
+  distance = 0; lives = state.isVip ? 3 : 1; elapsedTime = 0; runMaxSpeed = 0; runGold = 0; isCleared = false;
   speed = 12; boostT = 0; invuln = 0; nearMissCd = 0; crashFlash = 0;
   fuel = FUEL_MAX; throttle = 0; keysUD.up = false; keysUD.down = false;
   laneIdx = 1; laneX = 0; targetLaneX = 0;
@@ -972,12 +974,15 @@ function onCrash() {
     overlayLockUntil = Date.now() + 900;
     stopBGM();
     const d = Math.floor(distance);
+    const runTotal = d + runMaxSpeed * 10 + runGold;
     let changed = false;
     if (d > state.highScore) { state.highScore = d; changed = true; }
     if (runMaxSpeed > state.maxSpeedKmh) { state.maxSpeedKmh = runMaxSpeed; changed = true; }
+    if (runGold > state.bestRunGold) { state.bestRunGold = runGold; changed = true; }
+    if (runTotal > state.bestTotalScore) { state.bestTotalScore = runTotal; changed = true; }
     if (changed) saveState(true);
     document.getElementById('overlayTitle').textContent = 'CRASH!';
-    document.getElementById('overlaySub').textContent = `최종 ${d.toLocaleString()} m · 시간 ${formatTime(elapsedTime)} · 최고속도 ${runMaxSpeed} km/h`;
+    document.getElementById('overlaySub').textContent = `종합 ${runTotal.toLocaleString()}점 (거리 ${d.toLocaleString()}m · 최고 ${runMaxSpeed}km/h · 골드 +${runGold.toLocaleString()}G)`;
     document.getElementById('overlayActionBtn').textContent = '다시 레이스';
     document.getElementById('gameOverlay').classList.remove('opacity-0', 'pointer-events-none');
   }
@@ -1009,7 +1014,7 @@ function spawnCar() {
     mesh,
     lane: li,
     z: spawnZ,
-    speed: (isBus ? 6 : 8) + Math.random() * 6 + stage * 0.8,
+    speed: (isBus ? 6 : 8) + Math.random() * 6 + Math.min(1, elapsedTime / FINISH_TIME_SEC) * 8,
     halfLen: isBus ? 3.25 : 1.85,
     halfWidth: isBus ? 1.25 : 1.15
   });
@@ -1142,16 +1147,16 @@ function animate() {
     throttle = 0;
     if (keysUD.up) throttle += 1;
     if (keysUD.down) throttle -= 1;
-    const baseSpd = 10 + stage * 2.2 + (state.isVip ? 1.5 : 0);
+    const baseSpd = 16 + (state.isVip ? 2 : 0);
     const minSpd = 4;
-    const maxSpd = baseSpd + 14 + stage * 1.5;
-    let desired = baseSpd + throttle * 10;
+    const maxSpd = 56 + (state.isVip ? 4 : 0);
+    let desired = throttle > 0 ? maxSpd : throttle < 0 ? minSpd : baseSpd;
     if (boostT > 0) desired = maxSpd * boostMul;
     desired = Math.max(minSpd, Math.min(maxSpd * boostMul, desired));
     if (fuel <= 0) desired = Math.min(desired, minSpd * 0.6);
-    speed += (desired - speed) * Math.min(1, dt * (throttle < 0 ? 3.5 : 2.2));
+    speed += (desired - speed) * Math.min(1, dt * (throttle < 0 ? 3.8 : 2.6));
 
-    const drain = (0.35 + speed * 0.045 + (boostT > 0 ? 1.2 : 0) + (throttle > 0 ? 0.25 : 0)) * dt;
+    const drain = (0.35 + speed * 0.045 + (boostT > 0 ? 1.2 : 0) + (throttle > 0 ? 0.25 : 0)) * dt * 0.5;
     fuel = Math.max(0, fuel - drain);
 
     elapsedTime += dt;
@@ -1186,7 +1191,7 @@ function animate() {
     spawnT -= dt;
     if (spawnT <= 0) {
       spawnCar();
-      spawnT = Math.max(0.7, 1.6 - stage * 0.08) * (0.85 + Math.random() * 0.5);
+      spawnT = Math.max(0.65, 1.5 - Math.min(1, elapsedTime / FINISH_TIME_SEC) * 0.75) * (0.85 + Math.random() * 0.5);
     }
     coinSpawnT -= dt;
     if (coinSpawnT <= 0) { spawnCoin(); coinSpawnT = 2 + Math.random() * 1.5; }
@@ -1209,6 +1214,7 @@ function animate() {
         nearMissCd = 1;
         const b = state.isVip ? 18 : 7;
         state.gold += b;
+        runGold += b;
         distance += state.isVip ? 30 : 12;
         playSound('coin');
         showToast('💨 아슬아슬! +' + b + 'G');
@@ -1227,6 +1233,7 @@ function animate() {
       const dz = Math.abs(c.z - player.position.z);
       if (dz < 1.5 && dx < 1.3) {
         state.gold += 100;
+        runGold += 100;
         distance += state.isVip ? 25 : 10;
         playSound('coin');
         showToast('🪙 +100G');
@@ -1255,31 +1262,24 @@ function animate() {
       }
     }
 
-    const goal = stage * 700;
-    if (distance >= goal) {
-      if (stage >= MAX_STAGE) {
-        running = false;
-        isCleared = true;
-        overlayLockUntil = Date.now() + 1500;
-        stopBGM();
-        const d = Math.floor(distance);
-        if (d > state.highScore) state.highScore = d;
-        if (runMaxSpeed > state.maxSpeedKmh) state.maxSpeedKmh = runMaxSpeed;
-        if (state.bestTimeSec === null || elapsedTime < state.bestTimeSec) {
-          state.bestTimeSec = Math.round(elapsedTime * 10) / 10;
-        }
-        saveState(true);
-        document.getElementById('overlayTitle').textContent = '🏆 ALL CLEAR!';
-        document.getElementById('overlaySub').textContent = `완주! ${d.toLocaleString()} m · 도착시간 ${formatTime(elapsedTime)} · 최고속도 ${runMaxSpeed} km/h`;
-        document.getElementById('overlayActionBtn').textContent = '처음부터';
-        document.getElementById('gameOverlay').classList.remove('opacity-0', 'pointer-events-none');
-      } else {
-        stage++;
-        state.gold += state.isVip ? 30 : 12;
-        saveState(false);
-        updateGoldDisplay();
-        showToast('🏁 STAGE ' + stage + '/10');
-      }
+    if (elapsedTime >= FINISH_TIME_SEC) {
+      elapsedTime = FINISH_TIME_SEC;
+      running = false;
+      isCleared = true;
+      overlayLockUntil = Date.now() + 1500;
+      stopBGM();
+      const d = Math.floor(distance);
+      const runTotal = d + runMaxSpeed * 10 + runGold;
+      if (d > state.highScore) state.highScore = d;
+      if (runMaxSpeed > state.maxSpeedKmh) state.maxSpeedKmh = runMaxSpeed;
+      if (runGold > state.bestRunGold) state.bestRunGold = runGold;
+      if (runTotal > state.bestTotalScore) state.bestTotalScore = runTotal;
+      state.bestTimeSec = FINISH_TIME_SEC;
+      saveState(true);
+      document.getElementById('overlayTitle').textContent = '🏆 5분 완주 성공!';
+      document.getElementById('overlaySub').textContent = `종합 ${runTotal.toLocaleString()}점 · 거리 ${d.toLocaleString()}m · 최고 ${runMaxSpeed}km/h · 골드 +${runGold.toLocaleString()}G`;
+      document.getElementById('overlayActionBtn').textContent = '처음부터';
+      document.getElementById('gameOverlay').classList.remove('opacity-0', 'pointer-events-none');
     }
 
     const camTarget = new THREE.Vector3(laneX * 0.35, 3.8 + speed * 0.02, 7.5);
@@ -1311,13 +1311,10 @@ function updateGoldDisplay() {
 }
 function updateUILive() {
   document.getElementById('scoreDisplay').textContent = Math.floor(distance).toLocaleString() + ' m';
-  document.getElementById('scoreBadge').textContent = String(stage);
   document.getElementById('speedDisplay').textContent = Math.floor(speed * 4.5) + ' km/h';
   document.getElementById('livesDisplay').textContent = (state.isVip ? '👑' : '') + ('❤️'.repeat(Math.max(0, lives)) || '💀');
-  const mins = String(Math.floor(elapsedTime / 60)).padStart(2, '0');
-  const secs = String(Math.floor(elapsedTime % 60)).padStart(2, '0');
   const td = document.getElementById('timerDisplay');
-  if (td) td.textContent = mins + ':' + secs;
+  if (td) td.textContent = formatTime(elapsedTime) + ' / 05:00';
   const pct = Math.max(0, Math.min(100, fuel));
   const fill = document.getElementById('fuelBarFill');
   const ft = document.getElementById('fuelText');
@@ -1430,9 +1427,7 @@ async function fetchRank() {
     const d = await res.json();
     if (!res.ok) throw 0;
     if (d.myRank) {
-      const myTime = state.bestTimeSec !== null ? ' · 도착 ' + formatTime(state.bestTimeSec) : '';
-      const mySpd = state.maxSpeedKmh > 0 ? ' · 최고 ' + state.maxSpeedKmh + ' km/h' : '';
-      my.textContent = d.totalPlayers + '명 중 ' + d.myRank.rank + '위' + myTime + mySpd;
+      my.textContent = `${d.totalPlayers}명 중 ${d.myRank.rank}위 · 종합 ${(state.bestTotalScore || d.myRank.score || 0).toLocaleString()}점`;
     } else if (authToken) {
       my.textContent = '서버저장 시 순위 반영';
     } else {
@@ -1440,18 +1435,23 @@ async function fetchRank() {
     }
     box.innerHTML = '';
     (d.rankings || []).forEach(it => {
-      const tSec = it.bestTimeSec ?? it.saveData?.bestTimeSec ?? (it.isMe ? state.bestTimeSec : null);
+      const dist = it.highScore ?? it.saveData?.highScore ?? (it.isMe ? state.highScore : 0);
       const maxSpd = it.maxSpeedKmh ?? it.saveData?.maxSpeedKmh ?? (it.isMe ? state.maxSpeedKmh : 0);
-      const timeLabel = typeof tSec === 'number' && tSec > 0 ? '⏱️ ' + formatTime(tSec) : '⏱️ 미완주';
-      const spdLabel = typeof maxSpd === 'number' && maxSpd > 0 ? '🚀 ' + maxSpd + ' km/h' : '';
+      const rGold = it.bestRunGold ?? it.saveData?.bestRunGold ?? (it.isMe ? state.bestRunGold : 0);
+      const tSec = it.bestTimeSec ?? it.saveData?.bestTimeSec ?? (it.isMe ? state.bestTimeSec : null);
+      const parts = [];
+      if (dist > 0) parts.push('📏 ' + dist.toLocaleString() + 'm');
+      if (maxSpd > 0) parts.push('🚀 ' + maxSpd + 'km/h');
+      if (rGold > 0) parts.push('🪙 ' + rGold.toLocaleString() + 'G');
+      parts.push(typeof tSec === 'number' && tSec > 0 ? '⏱️ 완주' : '⏱️ 주행중');
       const r = document.createElement('div');
       r.className = 'rounded-lg px-3 py-2 border bg-slate-950 border-slate-800 flex items-center justify-between gap-2 text-[11px]' + (it.isMe ? ' ring-1 ring-sky-400' : '');
       r.innerHTML =
         '<div class="min-w-0">' +
           '<div class="font-bold text-slate-100 truncate">' + it.rank + '. ' + it.maskedName + (it.isMe ? ' <span class="text-sky-300 text-[10px]">(나)</span>' : '') + '</div>' +
-          '<div class="text-[10px] text-slate-400 mt-0.5">' + timeLabel + (spdLabel ? ' · ' + spdLabel : '') + '</div>' +
+          '<div class="text-[10px] text-slate-400 mt-0.5 truncate">' + parts.join(' · ') + '</div>' +
         '</div>' +
-        '<span class="font-black text-orange-400 shrink-0">' + (it.score || 0).toLocaleString() + ' m</span>';
+        '<span class="font-black text-orange-400 shrink-0">' + (it.score || 0).toLocaleString() + ' 점</span>';
       box.appendChild(r);
     });
   } catch { box.innerHTML = '<div class="text-center text-[11px] text-slate-500 py-3">랭킹 대기 중</div>'; }
@@ -1584,7 +1584,7 @@ const resetM = document.getElementById('resetModal');
 document.getElementById('resetOpenBtn').onclick = () => { resetM.classList.remove('hidden'); resetM.classList.add('flex'); };
 document.getElementById('resetCancelBtn').onclick = () => { resetM.classList.add('hidden'); resetM.classList.remove('flex'); };
 document.getElementById('resetConfirmBtn').onclick = () => {
-  state = defState(); distance = 0; stage = 1; lives = 1; speed = 0; elapsedTime = 0; runMaxSpeed = 0; isCleared = false; running = false; stopBGM();
+  state = defState(); distance = 0; lives = 1; speed = 0; elapsedTime = 0; runMaxSpeed = 0; runGold = 0; isCleared = false; running = false; stopBGM();
   applySelectedBikeMesh();
   document.getElementById('gameOverlay').classList.remove('opacity-0', 'pointer-events-none');
   document.getElementById('overlayTitle').textContent = '오토바이 레이싱';
