@@ -66,7 +66,7 @@ body{margin:0;font-family:'Noto Sans KR',sans-serif;user-select:none;-webkit-tap
 <section class="relative rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl shadow-black/50 bg-black" style="height:min(58vh,520px)">
 <div id="viewport" class="absolute inset-0"></div>
 <div id="gameOverlay" class="absolute inset-0 z-10 bg-slate-950/70 backdrop-blur-[3px] flex flex-col items-center justify-center gap-2.5 p-3 sm:p-5 overflow-y-auto">
-<div id="overlayTitle" class="text-xl sm:text-2xl font-black text-orange-400 tracking-tight">NEON HIGHWAY 3D</div>
+<div id="overlayTitle" class="text-xl sm:text-2xl font-black text-orange-400 tracking-tight">오토바이 레이싱</div>
 <p id="overlaySub" class="text-[11px] sm:text-xs text-slate-300 text-center px-2 max-w-md">오토바이를 선택하고 차선을 피하며 질주하세요!</p>
 
 <!-- Bike Selection (Left / Right) -->
@@ -154,7 +154,7 @@ body{margin:0;font-family:'Noto Sans KR',sans-serif;user-select:none;-webkit-tap
 <span class="px-3 py-2.5 bg-slate-900 text-orange-300 font-bold text-sm border-r border-slate-800">010-</span>
 <input id="authPhoneDigits" type="tel" inputmode="numeric" maxlength="9" required placeholder="1234-5678" class="w-full px-3 py-2.5 bg-transparent text-sm font-bold focus:outline-none"/>
 </div>
-<input id="authPinCode" type="password" inputmode="numeric" maxlength="4" pattern="\\d{4}" required placeholder="PIN" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm font-bold tracking-widest focus:outline-none"/>
+<input id="authPinCode" type="password" inputmode="numeric" maxlength="4" pattern="\d{4}" required placeholder="PIN" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm font-bold tracking-widest focus:outline-none"/>
 <div id="authErrorMsg" class="hidden text-xs text-rose-400"></div>
 <button type="submit" class="w-full py-2.5 rounded-xl font-black bg-gradient-to-r from-orange-500 to-rose-600 text-slate-950 cursor-pointer">확인</button>
 </form>
@@ -192,7 +192,7 @@ let authToken = localStorage.getItem(TOKEN_KEY);
 let currentUsername = localStorage.getItem(USER_KEY);
 let isRegisterMode = false;
 
-const defState = () => ({ highScore: 0, gold: 200, soundEnabled: true, bgmEnabled: true, isVip: false, selectedBike: 1 });
+const defState = () => ({ highScore: 0, gold: 200, soundEnabled: true, bgmEnabled: true, isVip: false, selectedBike: 1, bestTimeSec: null, maxSpeedKmh: 0 });
 function sanitize(p) {
   const b = defState();
   if (!p || typeof p !== 'object') return b;
@@ -204,7 +204,9 @@ function sanitize(p) {
     soundEnabled: typeof p.soundEnabled === 'boolean' ? p.soundEnabled : true,
     bgmEnabled: typeof p.bgmEnabled === 'boolean' ? p.bgmEnabled : true,
     isVip,
-    selectedBike: isVip ? rawBike : 1
+    selectedBike: isVip ? rawBike : 1,
+    bestTimeSec: typeof p.bestTimeSec === 'number' && p.bestTimeSec > 0 ? Math.round(p.bestTimeSec * 10) / 10 : null,
+    maxSpeedKmh: typeof p.maxSpeedKmh === 'number' && p.maxSpeedKmh >= 0 ? Math.floor(p.maxSpeedKmh) : 0
   };
 }
 let state = (() => { try { const r = localStorage.getItem(STORAGE); return r ? sanitize(JSON.parse(r)) : defState(); } catch { return defState(); } })();
@@ -884,7 +886,13 @@ for (let i = 0; i < 6; i++) fuelPool.push(createFuelCan());
 
 // Game vars
 let running = false;
-let distance = 0, stage = 1, lives = 1, elapsedTime = 0;
+let distance = 0, stage = 1, lives = 1, elapsedTime = 0, runMaxSpeed = 0;
+let isCleared = false, overlayLockUntil = 0;
+function formatTime(sec) {
+  const m = String(Math.floor(sec / 60)).padStart(2, '0');
+  const sc = String(Math.floor(sec % 60)).padStart(2, '0');
+  return m + ':' + sc;
+}
 let speed = 0, boostT = 0, invuln = 0, nearMissCd = 0, crashFlash = 0;
 let laneIdx = 1, laneX = 0, targetLaneX = 0;
 let spawnT = 0, coinSpawnT = 0, fuelSpawnT = 0;
@@ -909,7 +917,7 @@ resize();
 
 function startGame() {
   applySelectedBikeMesh();
-  distance = 0; stage = 1; lives = state.isVip ? 3 : 1; elapsedTime = 0;
+  distance = 0; stage = 1; lives = state.isVip ? 3 : 1; elapsedTime = 0; runMaxSpeed = 0; isCleared = false;
   speed = 12; boostT = 0; invuln = 0; nearMissCd = 0; crashFlash = 0;
   fuel = FUEL_MAX; throttle = 0; keysUD.up = false; keysUD.down = false;
   laneIdx = 1; laneX = 0; targetLaneX = 0;
@@ -948,11 +956,16 @@ function onCrash() {
   }
   if (lives <= 0) {
     running = false;
+    isCleared = false;
+    overlayLockUntil = Date.now() + 900;
     stopBGM();
     const d = Math.floor(distance);
-    if (d > state.highScore) { state.highScore = d; saveState(true); }
+    let changed = false;
+    if (d > state.highScore) { state.highScore = d; changed = true; }
+    if (runMaxSpeed > state.maxSpeedKmh) { state.maxSpeedKmh = runMaxSpeed; changed = true; }
+    if (changed) saveState(true);
     document.getElementById('overlayTitle').textContent = 'CRASH!';
-    document.getElementById('overlaySub').textContent = `최종 ${d.toLocaleString()} m · STAGE ${stage}`;
+    document.getElementById('overlaySub').textContent = `최종 ${d.toLocaleString()} m · 시간 ${formatTime(elapsedTime)} · 최고속도 ${runMaxSpeed} km/h`;
     document.getElementById('overlayActionBtn').textContent = '다시 레이스';
     document.getElementById('gameOverlay').classList.remove('opacity-0', 'pointer-events-none');
   }
@@ -971,9 +984,11 @@ function spawnCar() {
   if (Math.random() < 0.12) li = laneIdx;
   const spawnZ = -58 - Math.random() * 20;
 
-  // Prevent overlapping vehicles in the same lane
-  const tooClose = activeCars.some(c => c.lane === li && Math.abs(c.z - spawnZ) < (isBus ? 11 : 7));
+  // Prevent overlapping vehicles in the same lane & never block all 3 lanes at once
+  const tooClose = activeCars.some(c => c.lane === li && Math.abs(c.z - spawnZ) < (isBus ? 12 : 8));
   if (tooClose) return;
+  const occupiedLanesNear = new Set(activeCars.filter(c => Math.abs(c.z - spawnZ) < 13).map(c => c.lane));
+  if (occupiedLanesNear.size >= 2 && !occupiedLanesNear.has(li)) return;
 
   mesh.visible = true;
   mesh.position.set(LANES[li], 0, spawnZ);
@@ -1055,15 +1070,25 @@ function updateBikeSelectUI() {
 }
 
 // Input
+function isModalOpen() {
+  return !authM.classList.contains('hidden') || !vipM.classList.contains('hidden') || !resetM.classList.contains('hidden');
+}
 window.addEventListener('keydown', e => {
+  if (isModalOpen()) return;
   if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { changeLane(-1); e.preventDefault(); }
   if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { changeLane(1); e.preventDefault(); }
-  if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') { keysUD.up = true; e.preventDefault(); if (!running) startGame(); }
+  if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+    keysUD.up = true; e.preventDefault();
+    if (!running && !isCleared && Date.now() >= overlayLockUntil) startGame();
+  }
   if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') { keysUD.down = true; e.preventDefault(); }
   if (e.code === 'Space') {
     e.preventDefault();
-    if (!running) startGame();
-    else if (boostT <= 0 && fuel > 5) { boostT = state.isVip ? 2.4 : 1.5; playSound('boost'); }
+    if (!running) {
+      if (!isCleared && Date.now() >= overlayLockUntil) startGame();
+    } else if (boostT <= 0 && fuel > 5) {
+      boostT = state.isVip ? 2.4 : 1.5; playSound('boost');
+    }
   }
 });
 window.addEventListener('keyup', e => {
@@ -1071,7 +1096,10 @@ window.addEventListener('keyup', e => {
   if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') keysUD.down = false;
 });
 viewport.addEventListener('pointerdown', e => {
-  if (!running) { startGame(); return; }
+  if (!running) {
+    if (!isCleared && Date.now() >= overlayLockUntil) startGame();
+    return;
+  }
   const r = viewport.getBoundingClientRect();
   changeLane((e.clientX - r.left) < r.width * 0.5 ? -1 : 1);
 });
@@ -1115,6 +1143,8 @@ function animate() {
     fuel = Math.max(0, fuel - drain);
 
     elapsedTime += dt;
+    const curKmh = Math.floor(speed * 4.5);
+    if (curKmh > runMaxSpeed) runMaxSpeed = curKmh;
     distance += speed * dt * 2.2;
     roadScroll += speed * dt;
 
@@ -1216,11 +1246,19 @@ function animate() {
     const goal = stage * 700;
     if (distance >= goal) {
       if (stage >= MAX_STAGE) {
-        running = false; stopBGM();
+        running = false;
+        isCleared = true;
+        overlayLockUntil = Date.now() + 1500;
+        stopBGM();
         const d = Math.floor(distance);
-        if (d > state.highScore) { state.highScore = d; saveState(true); }
-        document.getElementById('overlayTitle').textContent = '🏆 ALL CLEAR';
-        document.getElementById('overlaySub').textContent = `완주! ${d.toLocaleString()} m`;
+        if (d > state.highScore) state.highScore = d;
+        if (runMaxSpeed > state.maxSpeedKmh) state.maxSpeedKmh = runMaxSpeed;
+        if (state.bestTimeSec === null || elapsedTime < state.bestTimeSec) {
+          state.bestTimeSec = Math.round(elapsedTime * 10) / 10;
+        }
+        saveState(true);
+        document.getElementById('overlayTitle').textContent = '🏆 ALL CLEAR!';
+        document.getElementById('overlaySub').textContent = `완주! ${d.toLocaleString()} m · 도착시간 ${formatTime(elapsedTime)} · 최고속도 ${runMaxSpeed} km/h`;
         document.getElementById('overlayActionBtn').textContent = '처음부터';
         document.getElementById('gameOverlay').classList.remove('opacity-0', 'pointer-events-none');
       } else {
@@ -1379,12 +1417,29 @@ async function fetchRank() {
     const res = await fetch(API + '/api/ranking?gameId=' + GAME_ID, { headers: h });
     const d = await res.json();
     if (!res.ok) throw 0;
-    if (d.myRank) my.textContent = d.totalPlayers + '명 중 ' + d.myRank.rank + '위';
+    if (d.myRank) {
+      const myTime = state.bestTimeSec !== null ? ' · 도착 ' + formatTime(state.bestTimeSec) : '';
+      const mySpd = state.maxSpeedKmh > 0 ? ' · 최고 ' + state.maxSpeedKmh + ' km/h' : '';
+      my.textContent = d.totalPlayers + '명 중 ' + d.myRank.rank + '위' + myTime + mySpd;
+    } else if (authToken) {
+      my.textContent = '서버저장 시 순위 반영';
+    } else {
+      my.textContent = '로그인 후 등록';
+    }
     box.innerHTML = '';
     (d.rankings || []).forEach(it => {
+      const tSec = it.bestTimeSec ?? it.saveData?.bestTimeSec ?? (it.isMe ? state.bestTimeSec : null);
+      const maxSpd = it.maxSpeedKmh ?? it.saveData?.maxSpeedKmh ?? (it.isMe ? state.maxSpeedKmh : 0);
+      const timeLabel = typeof tSec === 'number' && tSec > 0 ? '⏱️ ' + formatTime(tSec) : '⏱️ 미완주';
+      const spdLabel = typeof maxSpd === 'number' && maxSpd > 0 ? '🚀 ' + maxSpd + ' km/h' : '';
       const r = document.createElement('div');
-      r.className = 'rounded-lg px-3 py-1.5 border bg-slate-950 border-slate-800 flex justify-between text-[11px]';
-      r.innerHTML = '<span class="font-bold">' + it.rank + '. ' + it.maskedName + '</span><span class="font-black text-orange-400">' + it.score.toLocaleString() + ' m</span>';
+      r.className = 'rounded-lg px-3 py-2 border bg-slate-950 border-slate-800 flex items-center justify-between gap-2 text-[11px]' + (it.isMe ? ' ring-1 ring-sky-400' : '');
+      r.innerHTML =
+        '<div class="min-w-0">' +
+          '<div class="font-bold text-slate-100 truncate">' + it.rank + '. ' + it.maskedName + (it.isMe ? ' <span class="text-sky-300 text-[10px]">(나)</span>' : '') + '</div>' +
+          '<div class="text-[10px] text-slate-400 mt-0.5">' + timeLabel + (spdLabel ? ' · ' + spdLabel : '') + '</div>' +
+        '</div>' +
+        '<span class="font-black text-orange-400 shrink-0">' + (it.score || 0).toLocaleString() + ' m</span>';
       box.appendChild(r);
     });
   } catch { box.innerHTML = '<div class="text-center text-[11px] text-slate-500 py-3">랭킹 대기 중</div>'; }
@@ -1429,26 +1484,69 @@ phone.oninput = e => { const d = e.target.value.replace(/\D/g, '').slice(0, 8); 
 pin.oninput = e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4); };
 document.getElementById('authForm').onsubmit = async e => {
   e.preventDefault();
+  const errEl = document.getElementById('authErrorMsg');
+  errEl.classList.add('hidden');
+
   const raw = phone.value.replace(/\D/g, '');
+  const pinVal = pin.value.trim();
+  if (raw.length !== 8) {
+    errEl.textContent = '휴대폰 번호 뒷 8자리 숫자를 모두 입력해 주세요.';
+    errEl.classList.remove('hidden');
+    phone.focus();
+    return;
+  }
+  if (!/^\d{4}$/.test(pinVal)) {
+    errEl.textContent = '비밀번호는 숫자 4자리로 입력해 주세요.';
+    errEl.classList.remove('hidden');
+    pin.focus();
+    return;
+  }
+
   const id = '010-' + raw.slice(0, 4) + '-' + raw.slice(4);
+  const payload = isRegisterMode
+    ? { username: id, password: pinVal, initialSaveData: state, gameId: GAME_ID }
+    : { username: id, password: pinVal, gameId: GAME_ID };
+
   try {
     const res = await fetch(API + (isRegisterMode ? '/api/register' : '/api/login'), {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: id, password: pin.value.trim(), gameId: GAME_ID, initialSaveData: state })
+      body: JSON.stringify(payload)
     });
     const d = await res.json();
     if (!res.ok) {
-      document.getElementById('authErrorMsg').textContent = d.error || '오류';
-      document.getElementById('authErrorMsg').classList.remove('hidden');
+      errEl.textContent = d.error || '로그인/가입 처리 중 오류가 발생했습니다.';
+      errEl.classList.remove('hidden');
       return;
     }
     authToken = d.token; currentUsername = d.username;
     localStorage.setItem(TOKEN_KEY, authToken); localStorage.setItem(USER_KEY, currentUsername);
-    if (d.isVip || d.saveData?.isVip) state.isVip = true;
-    state = sanitize(state); applySelectedBikeMesh(); saveState(true);
+
+    if (!isRegisterMode) {
+      if (d.saveData) {
+        state = sanitize({ ...(d.saveData || {}), isVip: Boolean(d.isVip || d.saveData?.isVip) });
+        localStorage.setItem(STORAGE, JSON.stringify(state));
+        if (state.isVip) await syncSave(false);
+      } else {
+        if (d.isVip) state.isVip = true;
+        state = sanitize(state);
+        await syncSave(false);
+      }
+    } else {
+      if (d.isVip) state.isVip = true;
+      state = sanitize(state);
+      localStorage.setItem(STORAGE, JSON.stringify(state));
+    }
+
+    applySelectedBikeMesh();
     authM.classList.add('hidden'); authM.classList.remove('flex');
-    updateUI(); showToast('🟨 로그인 완료');
-  } catch {}
+    pin.value = '';
+    updateUI();
+    fetchRank();
+    showToast(isRegisterMode ? `🟨 [${currentUsername}] 가입 완료!` : `🟨 [${currentUsername}] 로그인 완료!`);
+  } catch {
+    errEl.textContent = '클라우드 게임 서버와 연결할 수 없습니다.';
+    errEl.classList.remove('hidden');
+  }
 };
 document.getElementById('logoutBtn').onclick = () => handleLogout(false);
 function handleLogout(exp) {
@@ -1462,10 +1560,10 @@ const resetM = document.getElementById('resetModal');
 document.getElementById('resetOpenBtn').onclick = () => { resetM.classList.remove('hidden'); resetM.classList.add('flex'); };
 document.getElementById('resetCancelBtn').onclick = () => { resetM.classList.add('hidden'); resetM.classList.remove('flex'); };
 document.getElementById('resetConfirmBtn').onclick = () => {
-  state = defState(); distance = 0; stage = 1; lives = 1; speed = 0; elapsedTime = 0; running = false; stopBGM();
+  state = defState(); distance = 0; stage = 1; lives = 1; speed = 0; elapsedTime = 0; runMaxSpeed = 0; isCleared = false; running = false; stopBGM();
   applySelectedBikeMesh();
   document.getElementById('gameOverlay').classList.remove('opacity-0', 'pointer-events-none');
-  document.getElementById('overlayTitle').textContent = 'NEON HIGHWAY 3D';
+  document.getElementById('overlayTitle').textContent = '오토바이 레이싱';
   document.getElementById('overlaySub').textContent = '오토바이를 선택하고 차선을 피하며 질주하세요!';
   document.getElementById('overlayActionBtn').textContent = '레이스 시작';
   saveState(true); updateUI();
