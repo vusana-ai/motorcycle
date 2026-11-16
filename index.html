@@ -1620,15 +1620,19 @@ function updateUI() {
   renderColorPalette();
   updateUILive();
   const b = document.getElementById('userBadge'), s = document.getElementById('syncStatusText');
-  const sl = document.getElementById('serverSaveBtnLabel'), lo = document.getElementById('logoutBtn');
+  const loginBtn = document.getElementById('serverSaveGoldBtn'), lo = document.getElementById('logoutBtn');
   if (authToken && currentUsername) {
     b.textContent = '📱 ' + maskPhoneMiddle(currentUsername) + (state.isVip ? ' 👑' : '');
     b.className = 'px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/40 text-emerald-300';
-    s.textContent = '클라우드 연동 중'; sl.textContent = '로그인'; lo.classList.remove('hidden');
+    s.textContent = '클라우드 연동 중';
+    loginBtn.classList.add('hidden');
+    lo.classList.remove('hidden');
   } else {
     b.textContent = '👤 게스트';
     b.className = 'px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-800 border border-slate-700 text-slate-300';
-    s.textContent = '로그인으로 전적 영구 저장'; sl.textContent = '로그인'; lo.classList.add('hidden');
+    s.textContent = '로그인으로 전적 영구 저장';
+    loginBtn.classList.remove('hidden');
+    lo.classList.add('hidden');
   }
 }
 function showToast(m) {
