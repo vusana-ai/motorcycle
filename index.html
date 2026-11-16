@@ -13,8 +13,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:'Noto Sans KR',sans-serif;user-select:none;-webkit-tap-highlight-color:transparent;background:#0a0f1a;color:#e2e8f0;overflow-x:hidden}
-#gameCanvas{display:block;width:100%;height:100%;touch-action:none}
+html,body{margin:0;max-width:100%;overflow-x:hidden}body{font-family:'Noto Sans KR',sans-serif;user-select:none;-webkit-tap-highlight-color:transparent;background:#0a0f1a;color:#e2e8f0}
+#gameCanvas,#viewport canvas{display:block;width:100%!important;height:100%!important;touch-action:none}#viewport{touch-action:none}
 .vip-btn-glow{animation:vp 2.2s infinite ease-in-out}
 @keyframes vp{0%,100%{box-shadow:0 0 8px rgba(168,85,247,.45)}50%{box-shadow:0 0 15px rgba(232,121,249,.8)}}
 #hudSpeed{font-variant-numeric:tabular-nums}
@@ -63,16 +63,17 @@ body{margin:0;font-family:'Noto Sans KR',sans-serif;user-select:none;-webkit-tap
 </section>
 
 <!-- 3D viewport -->
-<section class="relative rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl shadow-black/50 bg-black" style="height:min(58vh,520px)">
+<section class="relative rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl shadow-black/50 bg-black h-[52dvh] min-h-[310px] max-h-[520px] sm:h-[min(58vh,520px)]">
 <div id="viewport" class="absolute inset-0"></div>
-<div id="gameOverlay" class="absolute inset-0 z-10 bg-slate-950/70 backdrop-blur-[3px] flex flex-col items-center justify-center gap-2.5 p-3 sm:p-5 overflow-y-auto">
+<div id="gameOverlay" class="absolute inset-0 z-10 bg-slate-950/70 backdrop-blur-[3px] p-2.5 sm:p-5 overflow-y-auto">
+<div class="w-full min-h-full flex flex-col items-center justify-center gap-2 sm:gap-2.5">
 <div id="overlayTitle" class="text-xl sm:text-2xl font-black text-orange-400 tracking-tight">오토바이 레이싱</div>
 <p id="overlaySub" class="text-[11px] sm:text-xs text-slate-300 text-center px-2 max-w-md">오토바이를 선택하고 차선을 피하며 질주하세요!</p>
 
 <!-- Bike Selection (Left / Right) -->
-<div id="bikeSelectGrid" class="grid grid-cols-2 gap-2.5 sm:gap-3 w-full max-w-md">
-<button id="bikeCard1" type="button" class="text-left rounded-xl p-2.5 sm:p-3 border-2 border-orange-400 bg-slate-900/90 hover:bg-slate-800/90 transition cursor-pointer relative shadow-lg">
-<div class="flex items-center justify-between gap-1 mb-1">
+<div id="bikeSelectGrid" class="grid grid-cols-2 gap-2 sm:gap-3 w-full max-w-md">
+<button id="bikeCard1" type="button" class="text-left rounded-xl p-2 sm:p-3 border-2 border-orange-400 bg-slate-900/90 hover:bg-slate-800/90 transition cursor-pointer relative shadow-lg min-w-0">
+<div class="flex flex-wrap items-center justify-between gap-1 mb-1">
 <span class="text-[10px] font-black px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300 border border-orange-500/40">1번 · 기본</span>
 <span id="bike1SelectedBadge" class="text-[10px] font-black text-emerald-300">✔ 선택됨</span>
 </div>
@@ -80,8 +81,8 @@ body{margin:0;font-family:'Noto Sans KR',sans-serif;user-select:none;-webkit-tap
 <div class="text-[10px] text-slate-400 mt-0.5 leading-tight">오렌지 스포츠 바이크 · 누구나 탑승 가능</div>
 </button>
 
-<button id="bikeCard2" type="button" class="text-left rounded-xl p-2.5 sm:p-3 border-2 border-slate-700 bg-slate-900/90 hover:bg-slate-800/90 transition cursor-pointer relative shadow-lg">
-<div class="flex items-center justify-between gap-1 mb-1">
+<button id="bikeCard2" type="button" class="text-left rounded-xl p-2 sm:p-3 border-2 border-slate-700 bg-slate-900/90 hover:bg-slate-800/90 transition cursor-pointer relative shadow-lg min-w-0">
+<div class="flex flex-wrap items-center justify-between gap-1 mb-1">
 <span class="text-[10px] font-black px-1.5 py-0.5 rounded bg-fuchsia-500/25 text-fuchsia-300 border border-fuchsia-400/50">2번 · 👑 VIP</span>
 <span id="bike2LockBadge" class="text-[10px] font-black text-amber-300">🔒 VIP 전용</span>
 </div>
@@ -92,17 +93,33 @@ body{margin:0;font-family:'Noto Sans KR',sans-serif;user-select:none;-webkit-tap
 
 <button id="overlayActionBtn" type="button" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-400 to-rose-500 text-slate-950 font-black text-sm cursor-pointer shadow-lg active:scale-95 transition">레이스 시작</button>
 </div>
+</div>
 <!-- fuel bar left -->
-<div class="absolute left-2 top-1/2 -translate-y-1/2 z-10 pointer-events-none flex flex-col items-center gap-1">
+<div class="absolute left-1.5 sm:left-2 top-1/2 -translate-y-1/2 z-10 pointer-events-none flex flex-col items-center gap-1">
 <div class="text-[9px] text-amber-200/90 font-bold tracking-wide">FUEL</div>
-<div class="w-3 h-28 rounded-full bg-black/50 border border-white/20 overflow-hidden relative">
+<div class="w-2.5 sm:w-3 h-20 sm:h-28 rounded-full bg-black/50 border border-white/20 overflow-hidden relative">
 <div id="fuelBarFill" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-amber-600 to-yellow-300 transition-[height] duration-150" style="height:100%"></div>
 </div>
 <div id="fuelText" class="text-[9px] text-amber-100/80 font-bold tabular-nums">100%</div>
 </div>
 <!-- touch zones hint -->
 <div class="absolute bottom-2 left-0 right-0 z-10 pointer-events-none flex justify-center">
-<div class="text-[10px] text-white/50 bg-black/40 px-3 py-1 rounded-full">←→ 차선 · ↑가속 ↓감속 · Space 부스터 · ⛽연료통</div>
+<div class="text-[10px] text-white/60 bg-black/45 px-2.5 py-1 rounded-full max-w-[92%] text-center leading-tight"><span class="sm:hidden">화면 좌·우 터치로 차선 이동 · ⛽연료통</span><span class="hidden sm:inline">←→ 차선 · ↑가속 ↓감속 · Space 부스터 · ⛽연료통</span></div>
+</div>
+</section>
+
+<!-- Mobile / Touch Control Bar (below 3D viewport so it never blocks the screen) -->
+<section aria-label="주행 조작 버튼" class="flex items-stretch justify-between gap-2.5 select-none">
+<button id="mobileBrakeBtn" type="button" style="touch-action:none" class="flex-1 max-w-[44%] sm:max-w-[200px] min-h-[54px] rounded-2xl bg-slate-900/95 border-2 border-rose-500/60 hover:border-rose-400 active:scale-95 text-rose-200 font-black text-sm flex items-center justify-center gap-1.5 shadow-lg transition cursor-pointer">
+<span class="text-lg">🛑</span><span>브레이크</span>
+</button>
+<div class="flex items-stretch gap-2 flex-1 justify-end">
+<button id="mobileBoostBtn" type="button" style="touch-action:manipulation" class="flex-1 max-w-[140px] min-h-[54px] rounded-2xl bg-gradient-to-b from-cyan-500 to-sky-600 border-2 border-cyan-300/70 active:scale-95 text-slate-950 font-black text-sm flex items-center justify-center gap-1 shadow-lg shadow-cyan-500/20 transition cursor-pointer">
+<span class="text-base">⚡</span><span>부스터</span>
+</button>
+<button id="mobileAccelBtn" type="button" style="touch-action:none" class="flex-1 max-w-[160px] min-h-[54px] rounded-2xl bg-gradient-to-b from-orange-400 to-rose-500 border-2 border-orange-300/70 active:scale-95 text-slate-950 font-black text-sm flex items-center justify-center gap-1 shadow-lg shadow-orange-500/20 transition cursor-pointer">
+<span class="text-base">🔥</span><span>가속</span>
+</button>
 </div>
 </section>
 
@@ -132,7 +149,7 @@ body{margin:0;font-family:'Noto Sans KR',sans-serif;user-select:none;-webkit-tap
 </div>
 
 <div id="vipModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 p-4">
-<div class="bg-slate-900 border border-purple-500/50 rounded-2xl max-w-md w-full p-5">
+<div class="bg-slate-900 border border-purple-500/50 rounded-2xl max-w-md w-full p-5 max-h-[90dvh] overflow-y-auto">
 <div class="flex justify-between mb-3"><h2 class="font-black text-amber-300">👑 VIP 7,000원</h2><button id="vipCloseBtn" type="button" class="cursor-pointer text-slate-400">✕</button></div>
 <ul class="text-xs text-slate-300 space-y-1 mb-3"><li>❤️ 목숨 3개</li><li>🪙 점수·골드 3배</li><li>⚡ 부스터 강화 &amp; 2번 VIP 오토바이 해금</li></ul>
 <div id="tossWidgetLoading" class="text-xs text-center text-slate-500 py-3">결제 로딩...</div>
@@ -142,7 +159,7 @@ body{margin:0;font-family:'Noto Sans KR',sans-serif;user-select:none;-webkit-tap
 </div>
 
 <div id="authModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-<div class="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
+<div class="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-sm w-full p-5 shadow-2xl max-h-[90dvh] overflow-y-auto">
 <div class="flex items-center justify-between mb-2">
 <div class="flex items-center gap-2">
 <span class="text-lg">🟨</span>
@@ -260,17 +277,15 @@ async function loadServer() {
   } catch {}
 }
 
-// Audio
-let audioCtx = null, bgmTimer = null, bgmStep = 0;
+// Audio (uses ./bgm.mp3 with Web Audio synth fallback)
+let audioCtx = null, bgmTimer = null, bgmStep = 0, bgmAudio = null, bgmFileFailed = false;
 const notes = [196, 247, 294, 392, 349, 294, 247, 220];
 function getAC() {
   if (!audioCtx) { const C = window.AudioContext || window.webkitAudioContext; if (C) audioCtx = new C(); }
   if (audioCtx?.state === 'suspended') audioCtx.resume().catch(() => {});
   return audioCtx;
 }
-function startBGM() {
-  stopBGM();
-  if (!state.bgmEnabled) return;
+function startSynthBGM() {
   const ctx = getAC(); if (!ctx) return;
   bgmStep = 0;
   bgmTimer = setInterval(() => {
@@ -283,7 +298,36 @@ function startBGM() {
     } catch {}
   }, 200);
 }
-function stopBGM() { if (bgmTimer) { clearInterval(bgmTimer); bgmTimer = null; } }
+function startBGM() {
+  stopBGM();
+  if (!state.bgmEnabled) return;
+  if (!bgmFileFailed) {
+    try {
+      if (!bgmAudio) {
+        bgmAudio = new Audio('./bgm.mp3');
+        bgmAudio.loop = true;
+        bgmAudio.volume = 0.45;
+        bgmAudio.addEventListener('error', () => {
+          bgmFileFailed = true;
+          if (state.bgmEnabled && running && !bgmTimer) startSynthBGM();
+        });
+      }
+      bgmAudio.currentTime = 0;
+      const p = bgmAudio.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(() => {
+          if (state.bgmEnabled && !bgmTimer) startSynthBGM();
+        });
+      }
+      return;
+    } catch { bgmFileFailed = true; }
+  }
+  startSynthBGM();
+}
+function stopBGM() {
+  if (bgmTimer) { clearInterval(bgmTimer); bgmTimer = null; }
+  if (bgmAudio) { try { bgmAudio.pause(); } catch {} }
+}
 function playSound(t) {
   if (!state.soundEnabled) return;
   const ctx = getAC(); if (!ctx) return;
@@ -922,11 +966,21 @@ const activeFuels = [];
 function resize() {
   const w = viewport.clientWidth, h = viewport.clientHeight;
   if (w < 1 || h < 1) return;
+  const aspect = w / h;
   renderer.setSize(w, h, false);
-  camera.aspect = w / h;
+  camera.aspect = aspect;
+  const baseFov = 60;
+  if (aspect < 1.25) {
+    const targetHalfTan = Math.tan(THREE.MathUtils.degToRad(baseFov) / 2) * (1.25 / Math.max(0.55, aspect));
+    camera.fov = Math.min(90, THREE.MathUtils.radToDeg(2 * Math.atan(targetHalfTan)));
+  } else {
+    camera.fov = baseFov;
+  }
   camera.updateProjectionMatrix();
 }
 window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 120));
+if (typeof ResizeObserver !== 'undefined') new ResizeObserver(resize).observe(viewport);
 resize();
 
 function startGame() {
@@ -1062,25 +1116,25 @@ function updateBikeSelectUI() {
   const sel = state.isVip ? state.selectedBike : 1;
 
   if (sel === 1) {
-    c1.className = 'text-left rounded-xl p-2.5 sm:p-3 border-2 border-orange-400 bg-slate-900/95 hover:bg-slate-800/95 transition cursor-pointer relative shadow-lg ring-2 ring-orange-400/30';
+    c1.className = 'text-left rounded-xl p-2 sm:p-3 border-2 border-orange-400 bg-slate-900/95 hover:bg-slate-800/95 transition cursor-pointer relative shadow-lg ring-2 ring-orange-400/30 min-w-0';
     b1.textContent = '✔ 선택됨';
     b1.className = 'text-[10px] font-black text-emerald-300';
   } else {
-    c1.className = 'text-left rounded-xl p-2.5 sm:p-3 border-2 border-slate-700 bg-slate-900/80 hover:bg-slate-800/90 transition cursor-pointer relative shadow-lg';
+    c1.className = 'text-left rounded-xl p-2 sm:p-3 border-2 border-slate-700 bg-slate-900/80 hover:bg-slate-800/90 transition cursor-pointer relative shadow-lg min-w-0';
     b1.textContent = '선택';
     b1.className = 'text-[10px] font-bold text-slate-400';
   }
 
   if (!state.isVip) {
-    c2.className = 'text-left rounded-xl p-2.5 sm:p-3 border-2 border-slate-700/80 bg-slate-900/75 hover:border-purple-500/60 transition cursor-pointer relative shadow-lg opacity-90';
+    c2.className = 'text-left rounded-xl p-2 sm:p-3 border-2 border-slate-700/80 bg-slate-900/75 hover:border-purple-500/60 transition cursor-pointer relative shadow-lg opacity-90 min-w-0';
     b2.textContent = '🔒 VIP 전용';
     b2.className = 'text-[10px] font-black text-amber-300';
   } else if (sel === 2) {
-    c2.className = 'text-left rounded-xl p-2.5 sm:p-3 border-2 border-fuchsia-400 bg-slate-900/95 hover:bg-slate-800/95 transition cursor-pointer relative shadow-lg ring-2 ring-fuchsia-400/35';
+    c2.className = 'text-left rounded-xl p-2 sm:p-3 border-2 border-fuchsia-400 bg-slate-900/95 hover:bg-slate-800/95 transition cursor-pointer relative shadow-lg ring-2 ring-fuchsia-400/35 min-w-0';
     b2.textContent = '✔ 선택됨';
     b2.className = 'text-[10px] font-black text-emerald-300';
   } else {
-    c2.className = 'text-left rounded-xl p-2.5 sm:p-3 border-2 border-slate-700 bg-slate-900/85 hover:border-fuchsia-400/60 transition cursor-pointer relative shadow-lg';
+    c2.className = 'text-left rounded-xl p-2 sm:p-3 border-2 border-slate-700 bg-slate-900/85 hover:border-fuchsia-400/60 transition cursor-pointer relative shadow-lg min-w-0';
     b2.textContent = '👑 선택 가능';
     b2.className = 'text-[10px] font-bold text-fuchsia-300';
   }
@@ -1126,6 +1180,45 @@ document.getElementById('startGameBtn').onclick = () => {
   else if (boostT <= 0 && fuel > 5) { boostT = state.isVip ? 2.4 : 1.5; playSound('boost'); }
 };
 document.getElementById('overlayActionBtn').onclick = () => startGame();
+
+// Below-screen touch/mouse controls (Brake, Accel, Booster)
+const mobileBrakeBtn = document.getElementById('mobileBrakeBtn');
+const mobileAccelBtn = document.getElementById('mobileAccelBtn');
+const mobileBoostBtn = document.getElementById('mobileBoostBtn');
+
+function bindHoldControl(btn, keyName, activeClass) {
+  const press = e => {
+    e.preventDefault();
+    keysUD[keyName] = true;
+    btn.classList.add(...activeClass);
+  };
+  const release = () => {
+    keysUD[keyName] = false;
+    btn.classList.remove(...activeClass);
+  };
+  btn.addEventListener('pointerdown', press);
+  btn.addEventListener('pointerup', release);
+  btn.addEventListener('pointercancel', release);
+  btn.addEventListener('pointerleave', release);
+  btn.addEventListener('contextmenu', e => e.preventDefault());
+}
+bindHoldControl(mobileBrakeBtn, 'down', ['bg-rose-600/40', 'ring-2', 'ring-rose-400', 'scale-95']);
+bindHoldControl(mobileAccelBtn, 'up', ['brightness-110', 'ring-2', 'ring-amber-200', 'scale-95']);
+window.addEventListener('blur', () => {
+  keysUD.up = false;
+  keysUD.down = false;
+  mobileBrakeBtn.classList.remove('bg-rose-600/40', 'ring-2', 'ring-rose-400', 'scale-95');
+  mobileAccelBtn.classList.remove('brightness-110', 'ring-2', 'ring-amber-200', 'scale-95');
+});
+
+mobileBoostBtn.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  if (!running) return;
+  if (boostT <= 0 && fuel > 5) {
+    boostT = state.isVip ? 2.4 : 1.5;
+    playSound('boost');
+  }
+});
 
 // Main loop
 const clock = new THREE.Clock();
@@ -1282,7 +1375,8 @@ function animate() {
       document.getElementById('gameOverlay').classList.remove('opacity-0', 'pointer-events-none');
     }
 
-    const camTarget = new THREE.Vector3(laneX * 0.35, 3.8 + speed * 0.02, 7.5);
+    const portraitZ = camera.aspect < 1 ? (1 - camera.aspect) * 2.8 : 0;
+    const camTarget = new THREE.Vector3(laneX * 0.35, 3.8 + speed * 0.02 + portraitZ * 0.25, 7.5 + portraitZ);
     camera.position.lerp(camTarget, 1 - Math.pow(0.001, dt));
     camera.lookAt(laneX * 0.5, 0.8, -6);
 
@@ -1290,9 +1384,10 @@ function animate() {
   } else {
     dayPhase = (dayPhase + dt / 120) % 1;
     updateDayNight(dayPhase);
-    camera.position.x = Math.sin(clock.elapsedTime * 0.35) * 1.9;
-    camera.position.y = 2.4;
-    camera.position.z = 5.0;
+    const portraitIdle = camera.aspect < 1 ? (1 - camera.aspect) * 2.2 : 0;
+    camera.position.x = Math.sin(clock.elapsedTime * 0.35) * (camera.aspect < 1 ? 1.2 : 1.9);
+    camera.position.y = 2.4 + portraitIdle * 0.2;
+    camera.position.z = 5.0 + portraitIdle;
     camera.lookAt(0, 0.85, -0.5);
     roadSegs.forEach(seg => {
       seg.position.z += dt * 4;
@@ -1327,6 +1422,13 @@ function updateUILive() {
     );
   }
   if (ft) ft.textContent = Math.floor(pct) + '%';
+  const boostBtn = document.getElementById('mobileBoostBtn');
+  if (boostBtn) {
+    const canBoost = running && boostT <= 0 && fuel > 5;
+    boostBtn.classList.toggle('opacity-60', running && !canBoost);
+    boostBtn.classList.toggle('ring-2', boostT > 0);
+    boostBtn.classList.toggle('ring-white', boostT > 0);
+  }
 }
 
 function updateDayNight(phase) {
