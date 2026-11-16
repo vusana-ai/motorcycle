@@ -38,8 +38,8 @@ html,body{margin:0;max-width:100%;overflow-x:hidden}body{font-family:'Noto Sans 
 <div class="flex items-center justify-between gap-2 text-[11px] border-t border-slate-800/60 pt-1.5">
 <p id="syncStatusText" class="text-slate-400 truncate">로그인으로 전적 영구 저장</p>
 <div class="flex gap-1 shrink-0">
-<button id="bgmToggleBtn" type="button" class="px-2 py-1 rounded-md bg-indigo-950/80 border border-indigo-700/50 cursor-pointer">🎵</button>
-<button id="soundToggleBtn" type="button" class="px-2 py-1 rounded-md bg-slate-800 border border-slate-700 cursor-pointer">🔊</button>
+<button id="bgmToggleBtn" type="button" class="px-2 py-1 rounded-md bg-indigo-950/80 border border-indigo-700/50 whitespace-nowrap cursor-pointer">🎵 배경음 ON</button>
+<button id="soundToggleBtn" type="button" class="px-2 py-1 rounded-md bg-slate-800 border border-slate-700 whitespace-nowrap cursor-pointer">🔊 효과음 ON</button>
 <button id="resetOpenBtn" type="button" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold cursor-pointer">대기실로</button>
 </div>
 </div>
@@ -1614,8 +1614,8 @@ function updateDayNight(phase) {
 function updateUI() {
   updateGoldDisplay();
   document.getElementById('vipHeaderBtnLabel').textContent = state.isVip ? 'VIP중' : 'VIP';
-  document.getElementById('soundToggleBtn').textContent = state.soundEnabled ? '🔊' : '🔇';
-  document.getElementById('bgmToggleBtn').textContent = state.bgmEnabled ? '🎵' : '🔇';
+  document.getElementById('soundToggleBtn').textContent = state.soundEnabled ? '🔊 효과음 ON' : '🔇 효과음 OFF';
+  document.getElementById('bgmToggleBtn').textContent = state.bgmEnabled ? '🎵 배경음 ON' : '🔇 배경음 OFF';
   updateBikeSelectUI();
   renderColorPalette();
   updateUILive();
