@@ -109,18 +109,16 @@ html,body{margin:0;max-width:100%;overflow-x:hidden}body{font-family:'Noto Sans 
 </section>
 
 <!-- Mobile / Touch Control Bar (below 3D viewport so it never blocks the screen) -->
-<section aria-label="주행 조작 버튼" class="flex items-stretch justify-between gap-2.5 select-none">
-<button id="mobileBrakeBtn" type="button" style="touch-action:none" class="flex-1 max-w-[44%] sm:max-w-[200px] min-h-[54px] rounded-2xl bg-slate-900/95 border-2 border-rose-500/60 hover:border-rose-400 active:scale-95 text-rose-200 font-black text-sm flex items-center justify-center gap-1.5 shadow-lg transition cursor-pointer">
-<span class="text-lg">🛑</span><span>브레이크</span>
+<section aria-label="주행 조작 버튼" class="grid grid-cols-3 gap-2 sm:gap-2.5 select-none">
+<button id="mobileBrakeBtn" type="button" style="touch-action:none" class="w-full min-h-[54px] rounded-2xl bg-slate-900/95 border-2 border-rose-500/60 hover:border-rose-400 active:scale-95 text-rose-200 font-black text-sm flex items-center justify-center gap-1.5 shadow-lg transition cursor-pointer">
+<span class="text-base sm:text-lg">🛑</span><span>브레이크</span>
 </button>
-<div class="flex items-stretch gap-2 flex-1 justify-end">
-<button id="mobileBoostBtn" type="button" style="touch-action:manipulation" class="flex-1 max-w-[140px] min-h-[54px] rounded-2xl bg-gradient-to-b from-cyan-500 to-sky-600 border-2 border-cyan-300/70 active:scale-95 text-slate-950 font-black text-sm flex items-center justify-center gap-1 shadow-lg shadow-cyan-500/20 transition cursor-pointer">
+<button id="mobileBoostBtn" type="button" style="touch-action:manipulation" class="w-full min-h-[54px] rounded-2xl bg-gradient-to-b from-cyan-500 to-sky-600 border-2 border-cyan-300/70 active:scale-95 text-slate-950 font-black text-sm flex items-center justify-center gap-1 shadow-lg shadow-cyan-500/20 transition cursor-pointer">
 <span class="text-base">⚡</span><span>부스터</span>
 </button>
-<button id="mobileAccelBtn" type="button" style="touch-action:none" class="flex-1 max-w-[160px] min-h-[54px] rounded-2xl bg-gradient-to-b from-orange-400 to-rose-500 border-2 border-orange-300/70 active:scale-95 text-slate-950 font-black text-sm flex items-center justify-center gap-1 shadow-lg shadow-orange-500/20 transition cursor-pointer">
+<button id="mobileAccelBtn" type="button" style="touch-action:none" class="w-full min-h-[54px] rounded-2xl bg-gradient-to-b from-orange-400 to-rose-500 border-2 border-orange-300/70 active:scale-95 text-slate-950 font-black text-sm flex items-center justify-center gap-1 shadow-lg shadow-orange-500/20 transition cursor-pointer">
 <span class="text-base">🔥</span><span>가속</span>
 </button>
-</div>
 </section>
 
 <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex flex-col gap-2">
