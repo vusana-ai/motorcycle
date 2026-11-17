@@ -62,8 +62,8 @@ html,body{margin:0;max-width:100%;overflow-x:hidden}body{font-family:'Noto Sans 
 </section>
 
 <!-- 3D viewport -->
-<section class="relative rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl shadow-black/50 bg-black h-[62dvh] min-h-[420px] max-h-[620px] sm:h-[min(64vh,580px)]">
-<div id="viewport" class="absolute inset-0"></div>
+<section class="relative rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl shadow-black/50 bg-black h-[52dvh] min-h-[340px] max-h-[560px] sm:h-[min(62vh,560px)]">
+<div id="viewport" class="absolute inset-0 cursor-pointer"></div>
 <div id="gameOverlay" class="absolute inset-0 z-10 bg-gradient-to-b from-slate-950/65 via-transparent to-slate-950/90 p-2 sm:p-4 overflow-y-auto pointer-events-auto">
 <div class="w-full min-h-full flex flex-col items-center justify-between gap-2">
 <div class="text-center pt-0.5">
@@ -120,21 +120,31 @@ html,body{margin:0;max-width:100%;overflow-x:hidden}body{font-family:'Noto Sans 
 </div>
 <!-- touch zones hint -->
 <div class="absolute bottom-2 left-0 right-0 z-10 pointer-events-none flex justify-center">
-<div class="text-[10px] text-white/60 bg-black/45 px-2.5 py-1 rounded-full max-w-[92%] text-center leading-tight"><span class="sm:hidden">화면 좌·우 터치로 차선 이동 · ⛽연료통</span><span class="hidden sm:inline">←→ 차선 · ↑가속 ↓감속 · Space 부스터 · ⛽연료통</span></div>
+<div class="text-[10px] text-white/75 bg-black/55 px-2.5 py-1 rounded-full max-w-[92%] text-center leading-tight"><span class="sm:hidden">화면 좌·우 터치 / 스와이프 / 하단 버튼으로 이동 · ⛽연료통</span><span class="hidden sm:inline">←→ 차선 · ↑가속 ↓감속 · Space 부스터 · ⛽연료통</span></div>
 </div>
 </section>
 
-<!-- Mobile / Touch Control Bar (below 3D viewport so it never blocks the screen) -->
-<section aria-label="주행 조작 버튼" class="grid grid-cols-3 gap-2 sm:gap-2.5 select-none">
-<button id="mobileBrakeBtn" type="button" style="touch-action:none" class="w-full min-h-[54px] rounded-2xl bg-slate-900/95 border-2 border-rose-500/60 hover:border-rose-400 active:scale-95 text-rose-200 font-black text-sm flex items-center justify-center gap-1.5 shadow-lg transition cursor-pointer">
+<!-- Mobile / Touch Control Bar (2단: 1단 좌/우 이동, 2단 브레이크/부스터/가속) -->
+<section aria-label="주행 조작 버튼" class="flex flex-col gap-2 select-none">
+<div class="grid grid-cols-2 gap-2 sm:gap-2.5">
+<button id="mobileLeftBtn" type="button" style="touch-action:manipulation" class="w-full min-h-[54px] rounded-2xl bg-slate-900/95 border-2 border-sky-500/60 hover:border-sky-400 active:scale-95 active:bg-sky-950 text-sky-200 font-black text-base flex items-center justify-center gap-2 shadow-lg transition cursor-pointer">
+<span class="text-xl">◀</span><span>왼쪽 차선</span>
+</button>
+<button id="mobileRightBtn" type="button" style="touch-action:manipulation" class="w-full min-h-[54px] rounded-2xl bg-slate-900/95 border-2 border-sky-500/60 hover:border-sky-400 active:scale-95 active:bg-sky-950 text-sky-200 font-black text-base flex items-center justify-center gap-2 shadow-lg transition cursor-pointer">
+<span>오른쪽 차선</span><span class="text-xl">▶</span>
+</button>
+</div>
+<div class="grid grid-cols-3 gap-2 sm:gap-2.5">
+<button id="mobileBrakeBtn" type="button" style="touch-action:none" class="w-full min-h-[50px] rounded-2xl bg-slate-900/95 border-2 border-rose-500/60 hover:border-rose-400 active:scale-95 text-rose-200 font-black text-sm flex items-center justify-center gap-1.5 shadow-lg transition cursor-pointer">
 <span class="text-base sm:text-lg">🛑</span><span>브레이크</span>
 </button>
-<button id="mobileBoostBtn" type="button" style="touch-action:manipulation" class="w-full min-h-[54px] rounded-2xl bg-gradient-to-b from-cyan-500 to-sky-600 border-2 border-cyan-300/70 active:scale-95 text-slate-950 font-black text-sm flex items-center justify-center gap-1 shadow-lg shadow-cyan-500/20 transition cursor-pointer">
+<button id="mobileBoostBtn" type="button" style="touch-action:manipulation" class="w-full min-h-[50px] rounded-2xl bg-gradient-to-b from-cyan-500 to-sky-600 border-2 border-cyan-300/70 active:scale-95 text-slate-950 font-black text-sm flex items-center justify-center gap-1 shadow-lg shadow-cyan-500/20 transition cursor-pointer">
 <span class="text-base">⚡</span><span>부스터</span>
 </button>
-<button id="mobileAccelBtn" type="button" style="touch-action:none" class="w-full min-h-[54px] rounded-2xl bg-gradient-to-b from-orange-400 to-rose-500 border-2 border-orange-300/70 active:scale-95 text-slate-950 font-black text-sm flex items-center justify-center gap-1 shadow-lg shadow-orange-500/20 transition cursor-pointer">
+<button id="mobileAccelBtn" type="button" style="touch-action:none" class="w-full min-h-[50px] rounded-2xl bg-gradient-to-b from-orange-400 to-rose-500 border-2 border-orange-300/70 active:scale-95 text-slate-950 font-black text-sm flex items-center justify-center gap-1 shadow-lg shadow-orange-500/20 transition cursor-pointer">
 <span class="text-base">🔥</span><span>가속</span>
 </button>
+</div>
 </section>
 
 <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex flex-col gap-2">
@@ -385,6 +395,7 @@ function playSound(t) {
 
 // ===== THREE.JS SCENE =====
 const viewport = document.getElementById('viewport');
+const gameOverlayEl = document.getElementById('gameOverlay');
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setClearColor(0x0a0f1a);
@@ -416,7 +427,7 @@ const neonR = new THREE.PointLight(0x22d3ee, 0.6, 30);
 neonR.position.set(6, 2, -5);
 scene.add(neonR);
 
-// Day/night cycle (0=midnight, 0.25=sunrise, 0.5=noon, 0.75=sunset)
+// Day/night cycle
 let dayPhase = 0.35;
 const hemi = new THREE.HemisphereLight(0x87ceeb, 0x1a1a2e, 0.35);
 scene.add(hemi);
@@ -490,8 +501,7 @@ for (let i = 0; i < 600; i++) starPos[i] = (Math.random() - 0.5) * 200;
 starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
 scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, sizeAttenuation: true })));
 
-// Build realistic sport motorcycle + human rider (variant 1: Orange Street, variant 2: VIP Purple/Gold GT)
-// Note: Bike forward faces -Z (away from camera toward oncoming traffic)
+// Build realistic sport motorcycle + human rider
 function createBike(variant = 1) {
   const root = new THREE.Group();
   const isVipBike = variant === 2;
@@ -520,7 +530,6 @@ function createBike(variant = 1) {
     roughness: 0.1
   });
 
-  // Wheels (Front at z = -0.68, Rear at z = +0.58)
   const wheelPositions = [
     { z: -0.68, r: 0.29, tube: 0.085 },
     { z: 0.58, r: 0.30, tube: 0.105 }
@@ -542,7 +551,6 @@ function createBike(variant = 1) {
     disc.position.set(0, wp.r + 0.04, wp.z);
     root.add(disc);
 
-    // Fender / mudguard
     const fender = new THREE.Mesh(
       new THREE.CylinderGeometry(wp.r + 0.11, wp.r + 0.11, 0.20, 12, 1, true, -Math.PI * 0.38, Math.PI * 0.76),
       paintMat
@@ -553,7 +561,6 @@ function createBike(variant = 1) {
     root.add(fender);
   });
 
-  // Engine & lower belly pan
   const engine = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.32, 0.56), frameMat);
   engine.position.set(0, 0.40, -0.05);
   engine.castShadow = true;
@@ -563,14 +570,12 @@ function createBike(variant = 1) {
   bellyPan.position.set(0, 0.26, -0.06);
   root.add(bellyPan);
 
-  // Rear swingarm
   [-0.13, 0.13].forEach(x => {
     const arm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.08, 0.56), frameMat);
     arm.position.set(x, 0.34, 0.32);
     root.add(arm);
   });
 
-  // Sculpted fuel tank & side fairings
   const tank = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.25, 0.52), paintMat);
   tank.position.set(0, 0.72, -0.18);
   tank.rotation.x = -0.14;
@@ -588,7 +593,6 @@ function createBike(variant = 1) {
     root.add(stripe);
   });
 
-  // Front nose cowl, headlight & windshield
   const nose = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.26, 0.38), paintMat);
   nose.position.set(0, 0.74, -0.52);
   nose.rotation.x = 0.28;
@@ -635,7 +639,6 @@ function createBike(variant = 1) {
   windshield.rotation.x = 0.65;
   root.add(windshield);
 
-  // Dual front forks + handlebars + grips + mirrors
   [-0.12, 0.12].forEach(x => {
     const fork = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.026, 0.64, 8), chromeMat);
     fork.position.set(x, 0.56, -0.56);
@@ -664,7 +667,6 @@ function createBike(variant = 1) {
     root.add(mirrorHead);
   });
 
-  // Sport seat & tail cowl & taillight
   const seat = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.10, 0.44), darkMat);
   seat.position.set(0, 0.68, 0.18);
   root.add(seat);
@@ -681,7 +683,6 @@ function createBike(variant = 1) {
   taillight.position.set(0, 0.75, 0.66);
   root.add(taillight);
 
-  // Dual exhaust pipes + twin boost flames
   const flames = [];
   [-0.17, 0.17].forEach(x => {
     const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.052, 0.56, 10), chromeMat);
@@ -701,7 +702,6 @@ function createBike(variant = 1) {
   });
   root.userData.flames = flames;
 
-  // VIP neon underglow strip
   if (isVipBike) {
     const glow = new THREE.Mesh(
       new THREE.BoxGeometry(0.28, 0.03, 0.9),
@@ -711,7 +711,6 @@ function createBike(variant = 1) {
     root.add(glow);
   }
 
-  // ===== Human Rider Seated in Sport-Bike Crouch =====
   const rider = new THREE.Group();
   const suitMat = new THREE.MeshStandardMaterial({
     color: isVipBike ? 0x1e1b4b : 0x1e293b,
@@ -735,13 +734,11 @@ function createBike(variant = 1) {
     roughness: 0.1
   });
 
-  // Pelvis seated on seat
   const pelvis = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.15, 0.24), suitMat);
   pelvis.position.set(0, 0.78, 0.16);
   pelvis.castShadow = true;
   rider.add(pelvis);
 
-  // Forward-leaning torso + racing back hump
   const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.15, 0.28, 4, 10), jacketMat);
   torso.position.set(0, 1.00, 0.02);
   torso.rotation.x = 0.62;
@@ -753,7 +750,6 @@ function createBike(variant = 1) {
   backHump.rotation.x = 0.62;
   rider.add(backHump);
 
-  // Full-face helmet + curved visor
   const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.155, 14, 14), helmetMat);
   helmet.position.set(0, 1.24, -0.14);
   helmet.scale.set(0.95, 1.0, 1.12);
@@ -764,9 +760,7 @@ function createBike(variant = 1) {
   visor.position.set(0, 1.23, -0.25);
   rider.add(visor);
 
-  // Arms reaching from shoulders to left/right handlebar grips
   [-1, 1].forEach(side => {
-    // Upper arm
     const upperArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.18, 4, 8), jacketMat);
     upperArm.position.set(side * 0.21, 1.02, -0.14);
     upperArm.rotation.x = 0.85;
@@ -774,7 +768,6 @@ function createBike(variant = 1) {
     upperArm.castShadow = true;
     rider.add(upperArm);
 
-    // Forearm + glove reaching grip at (side * 0.30, 0.85, -0.37)
     const forearm = new THREE.Mesh(new THREE.CapsuleGeometry(0.045, 0.19, 4, 8), jacketMat);
     forearm.position.set(side * 0.26, 0.89, -0.28);
     forearm.rotation.x = 1.25;
@@ -785,7 +778,6 @@ function createBike(variant = 1) {
     glove.position.set(side * 0.30, 0.85, -0.37);
     rider.add(glove);
 
-    // Thigh hugging tank
     const thigh = new THREE.Mesh(new THREE.CapsuleGeometry(0.068, 0.24, 4, 8), suitMat);
     thigh.position.set(side * 0.17, 0.68, 0.02);
     thigh.rotation.x = -0.95;
@@ -793,13 +785,11 @@ function createBike(variant = 1) {
     thigh.castShadow = true;
     rider.add(thigh);
 
-    // Shin down to footpeg
     const shin = new THREE.Mesh(new THREE.CapsuleGeometry(0.052, 0.24, 4, 8), suitMat);
     shin.position.set(side * 0.21, 0.46, 0.01);
     shin.rotation.x = 0.42;
     rider.add(shin);
 
-    // Boot on footpeg
     const boot = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.08, 0.19), bootMat);
     boot.position.set(side * 0.21, 0.32, 0.05);
     rider.add(boot);
@@ -855,6 +845,17 @@ function applySelectedBikeMesh() {
   applyBikeCustomColors();
 }
 
+// Overlay show/hide helper (fixes pointer-events conflict on mobile!)
+function setOverlayVisible(visible) {
+  if (visible) {
+    gameOverlayEl.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+    gameOverlayEl.classList.add('pointer-events-auto');
+  } else {
+    gameOverlayEl.classList.remove('pointer-events-auto');
+    gameOverlayEl.classList.add('opacity-0', 'pointer-events-none', 'hidden');
+  }
+}
+
 // Traffic pool (Cars + Buses)
 const carPool = [];
 const busPool = [];
@@ -893,7 +894,6 @@ function createCar(color) {
 
 function createBus(bodyColor = 0x2563eb) {
   const g = new THREE.Group();
-  // Main bus chassis
   const body = new THREE.Mesh(
     new THREE.BoxGeometry(1.95, 1.95, 6.2),
     new THREE.MeshStandardMaterial({ color: bodyColor, metalness: 0.3, roughness: 0.45 })
@@ -902,7 +902,6 @@ function createBus(bodyColor = 0x2563eb) {
   body.castShadow = true;
   g.add(body);
 
-  // White roof & lower trim
   const roof = new THREE.Mesh(
     new THREE.BoxGeometry(1.98, 0.14, 6.24),
     new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5 })
@@ -910,7 +909,6 @@ function createBus(bodyColor = 0x2563eb) {
   roof.position.y = 2.28;
   g.add(roof);
 
-  // Roof AC pods
   [-1.2, 1.2].forEach(z => {
     const ac = new THREE.Mesh(
       new THREE.BoxGeometry(1.1, 0.18, 1.0),
@@ -920,7 +918,6 @@ function createBus(bodyColor = 0x2563eb) {
     g.add(ac);
   });
 
-  // Tinted side window strip
   const sideWinMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.65, roughness: 0.2 });
   [-0.985, 0.985].forEach(x => {
     const winStrip = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.72, 5.5), sideWinMat);
@@ -928,7 +925,6 @@ function createBus(bodyColor = 0x2563eb) {
     g.add(winStrip);
   });
 
-  // Front windshield (facing +Z toward player)
   const frontGlass = new THREE.Mesh(
     new THREE.BoxGeometry(1.75, 0.85, 0.06),
     new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.55, metalness: 0.8 })
@@ -936,7 +932,6 @@ function createBus(bodyColor = 0x2563eb) {
   frontGlass.position.set(0, 1.58, 3.10);
   g.add(frontGlass);
 
-  // Destination LED sign above windshield
   const destSign = new THREE.Mesh(
     new THREE.BoxGeometry(1.1, 0.18, 0.05),
     new THREE.MeshBasicMaterial({ color: 0xfbbf24 })
@@ -944,7 +939,6 @@ function createBus(bodyColor = 0x2563eb) {
   destSign.position.set(0, 2.12, 3.11);
   g.add(destSign);
 
-  // Headlights & Taillights
   const headMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
   g.userData.headlightMat = headMat;
   const tailMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
@@ -957,7 +951,6 @@ function createBus(bodyColor = 0x2563eb) {
     g.add(tl);
   });
 
-  // 4 Bus wheels
   [[-0.86, 0.34, 1.95], [0.86, 0.34, 1.95], [-0.86, 0.34, -1.95], [0.86, 0.34, -1.95]].forEach(p => {
     const w = new THREE.Mesh(
       new THREE.CylinderGeometry(0.34, 0.34, 0.24, 12),
@@ -1027,7 +1020,7 @@ let fuel = 100;
 let throttle = 0;
 let keysUD = { up: false, down: false };
 const FUEL_MAX = 100;
-const activeCars = []; // { mesh, lane, z, speed, halfLen, halfWidth }
+const activeCars = [];
 const activeCoins = [];
 const activeFuels = [];
 
@@ -1068,14 +1061,18 @@ function startGame() {
   spawnT = 1.2; coinSpawnT = 2; fuelSpawnT = 3.5;
   running = true;
   if (state.bgmEnabled) startBGM();
-  document.getElementById('gameOverlay').classList.add('opacity-0', 'pointer-events-none');
+  setOverlayVisible(false);
   updateUI();
 }
 
 function changeLane(dir) {
   if (!running) return;
+  const prev = laneIdx;
   laneIdx = Math.max(0, Math.min(2, laneIdx + dir));
   targetLaneX = LANES[laneIdx];
+  if (prev !== laneIdx && navigator.vibrate) {
+    try { navigator.vibrate(15); } catch {}
+  }
 }
 
 function onCrash() {
@@ -1106,13 +1103,12 @@ function onCrash() {
     document.getElementById('overlayTitle').textContent = 'CRASH!';
     document.getElementById('overlaySub').textContent = `종합 ${runTotal.toLocaleString()}점 (거리 ${d.toLocaleString()}m · 최고 ${runMaxSpeed}km/h · 골드 +${runGold.toLocaleString()}G)`;
     document.getElementById('overlayActionBtn').textContent = '다시 레이스';
-    document.getElementById('gameOverlay').classList.remove('opacity-0', 'pointer-events-none');
+    setOverlayVisible(true);
   }
   updateUI();
 }
 
 function spawnCar() {
-  // Roughly 1 in 10 oncoming vehicles is a bus
   const wantBus = Math.random() < 0.1;
   let mesh = wantBus ? busPool.find(m => !m.visible) : null;
   const isBus = !!mesh;
@@ -1123,7 +1119,6 @@ function spawnCar() {
   if (Math.random() < 0.12) li = laneIdx;
   const spawnZ = -58 - Math.random() * 20;
 
-  // Prevent overlapping vehicles in the same lane & never block all 3 lanes at once
   const tooClose = activeCars.some(c => c.lane === li && Math.abs(c.z - spawnZ) < (isBus ? 12 : 8));
   if (tooClose) return;
   const occupiedLanesNear = new Set(activeCars.filter(c => Math.abs(c.z - spawnZ) < 13).map(c => c.lane));
@@ -1158,7 +1153,7 @@ function spawnFuel() {
   activeFuels.push({ mesh, lane: li, z: mesh.position.z });
 }
 
-// Bike selection handlers (Left = 1, Right = 2 VIP only)
+// Bike selection handlers
 function selectBike(num) {
   if (num === 2 && !state.isVip) {
     showToast('👑 2번 오토바이는 VIP 전용입니다!');
@@ -1256,7 +1251,7 @@ function updateBikeSelectUI() {
   }
 }
 
-// Input
+// Input (Keyboard + Viewport Tap & Swipe + Dedicated Left/Right Buttons)
 function isModalOpen() {
   return !authM.classList.contains('hidden') || !vipM.classList.contains('hidden') || !resetM.classList.contains('hidden');
 }
@@ -1282,13 +1277,46 @@ window.addEventListener('keyup', e => {
   if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') keysUD.up = false;
   if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') keysUD.down = false;
 });
+
+// Viewport Tap & Horizontal Swipe support for Mobile
+let swipeStartX = null;
+let swipeStartY = null;
+let swipeMoved = false;
+
 viewport.addEventListener('pointerdown', e => {
   if (!running) {
     if (!isCleared && Date.now() >= overlayLockUntil) startGame();
     return;
   }
-  const r = viewport.getBoundingClientRect();
-  changeLane((e.clientX - r.left) < r.width * 0.5 ? -1 : 1);
+  swipeStartX = e.clientX;
+  swipeStartY = e.clientY;
+  swipeMoved = false;
+});
+
+viewport.addEventListener('pointermove', e => {
+  if (!running || swipeStartX === null || swipeMoved) return;
+  const dx = e.clientX - swipeStartX;
+  if (Math.abs(dx) >= 24) {
+    changeLane(dx < 0 ? -1 : 1);
+    swipeMoved = true;
+  }
+});
+
+viewport.addEventListener('pointerup', e => {
+  if (!running || swipeStartX === null) return;
+  if (!swipeMoved) {
+    const r = viewport.getBoundingClientRect();
+    changeLane((e.clientX - r.left) < r.width * 0.5 ? -1 : 1);
+  }
+  swipeStartX = null;
+  swipeStartY = null;
+  swipeMoved = false;
+});
+
+viewport.addEventListener('pointercancel', () => {
+  swipeStartX = null;
+  swipeStartY = null;
+  swipeMoved = false;
 });
 
 document.getElementById('startGameBtn').onclick = () => {
@@ -1296,6 +1324,19 @@ document.getElementById('startGameBtn').onclick = () => {
   else if (boostT <= 0 && fuel > 5) { boostT = state.isVip ? 2.4 : 1.5; playSound('boost'); }
 };
 document.getElementById('overlayActionBtn').onclick = () => startGame();
+
+// Dedicated Left / Right Lane Buttons
+const mobileLeftBtn = document.getElementById('mobileLeftBtn');
+const mobileRightBtn = document.getElementById('mobileRightBtn');
+
+mobileLeftBtn.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  changeLane(-1);
+});
+mobileRightBtn.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  changeLane(1);
+});
 
 // Below-screen touch/mouse controls (Brake, Accel, Booster)
 const mobileBrakeBtn = document.getElementById('mobileBrakeBtn');
@@ -1488,7 +1529,7 @@ function animate() {
       document.getElementById('overlayTitle').textContent = '🏆 3분 완주 성공!';
       document.getElementById('overlaySub').textContent = `종합 ${runTotal.toLocaleString()}점 · 거리 ${d.toLocaleString()}m · 최고 ${runMaxSpeed}km/h · 골드 +${runGold.toLocaleString()}G`;
       document.getElementById('overlayActionBtn').textContent = '처음부터';
-      document.getElementById('gameOverlay').classList.remove('opacity-0', 'pointer-events-none');
+      setOverlayVisible(true);
     }
 
     const portraitZ = camera.aspect < 1 ? (1 - camera.aspect) * 2.8 : 0;
@@ -1826,14 +1867,14 @@ document.getElementById('resetOpenBtn').onclick = () => {
   document.getElementById('overlayTitle').textContent = '오토바이 레이싱';
   document.getElementById('overlaySub').textContent = '오토바이를 선택하고 차선을 피하며 질주하세요!';
   document.getElementById('overlayActionBtn').textContent = '레이스 시작';
-  document.getElementById('gameOverlay').classList.remove('opacity-0', 'pointer-events-none');
+  setOverlayVisible(true);
   updateUI();
 };
 document.getElementById('resetCancelBtn').onclick = () => { resetM.classList.add('hidden'); resetM.classList.remove('flex'); };
 document.getElementById('resetConfirmBtn').onclick = () => {
   state = defState(); distance = 0; lives = 1; speed = 0; elapsedTime = 0; runMaxSpeed = 0; runGold = 0; isCleared = false; running = false; stopBGM();
   applySelectedBikeMesh();
-  document.getElementById('gameOverlay').classList.remove('opacity-0', 'pointer-events-none');
+  setOverlayVisible(true);
   document.getElementById('overlayTitle').textContent = '오토바이 레이싱';
   document.getElementById('overlaySub').textContent = '오토바이를 선택하고 차선을 피하며 질주하세요!';
   document.getElementById('overlayActionBtn').textContent = '레이스 시작';
