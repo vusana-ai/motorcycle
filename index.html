@@ -4,6 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 <meta name="theme-color" content="#0a0f1a"/>
+<link rel="manifest" href="./manifest.json"/>
+<link rel="icon" type="image/png" href="./icon.png"/>
+<link rel="apple-touch-icon" href="./icon.png"/>
 <title>오토바이 레이싱 3D — 네온 하이웨이</title>
 <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 <script src="https://js.tosspayments.com/v2/standard"></script>
@@ -1923,8 +1926,15 @@ document.getElementById('resetConfirmBtn').onclick = () => {
 
 let deferred = null;
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; });
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
 document.getElementById('androidInstallBtn').onclick = async () => {
   if (deferred) { deferred.prompt(); await deferred.userChoice; deferred = null; document.getElementById('androidInstallBtnText').textContent = '완료'; return; }
+  if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    showToast('📲 브라우저 메뉴(⋮) → [홈 화면에 추가]를 눌러주세요!');
+    return;
+  }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['[InternetShortcut]\\r\\nURL=' + location.href + '\\r\\n'], { type: 'text/plain' }));
   a.download = '오토바이레이싱3D.url'; a.click();
