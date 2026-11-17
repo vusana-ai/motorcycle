@@ -1,6 +1,7 @@
 {
-  "name": "용사 키우기 — 클릭 훈련 RPG",
-  "short_name": "용사 키우기",
+  "id": "./",
+  "name": "오토바이 레이싱 3D",
+  "short_name": "오토바이 레이싱 3D",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -8,10 +9,16 @@
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3408/3408506.png",
-      "sizes": "512x512",
+      "src": "./icon.png",
+      "sizes": "192x192 512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
